@@ -1,38 +1,47 @@
 class Api::V1::ActorsController < ApplicationController
+  before_action :set_actor, only: [:show, :update, :destroy]
+
   def index
-    render json: Actor.all
+    actors = Actor.all
+    render json: actors
   end
 
   def show
-    render json: Actor.find(params[:id])
+    render json: @actor
   end
 
   def create
     actor = Actor.new(actor_params)
     if actor.save
-      render json: actor
+      render json: actor, status: :created
     else
-      render json: actor.erros, status: 422
+      render json: actor.errors, status: :unprocessable_entity
     end
   end
 
   def update
-    actor = Actor.find(params[:id])
-    if actor.update(actor_params)
-      render json: actor
+    if @actor.update(actor_params)
+      render json: @actor
     else
-      render json: actor.errors, status: 422
+      render json: @actor.errors, status: :unprocessable_entity
     end
   end
 
   def destroy
-    actor = Actor.find(params[:id])
-    actor.destroy
-    render json: actor
+    @actor.destroy
+    head :no_content
   end
 
   private
-    def actor_params
-      params.require(:actor).permit(:name, :country)
+
+  def set_actor
+    @actor = Actor.find_by(id: params[:id])
+    unless @actor
+      render json: { error: 'Actor not found' }, status: :not_found
     end
+  end
+
+  def actor_params
+    params.require(:actor).permit(:name, :country)
+  end
 end
